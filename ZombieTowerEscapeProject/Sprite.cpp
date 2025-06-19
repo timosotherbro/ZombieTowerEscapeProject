@@ -16,31 +16,51 @@ Sprite::Sprite() {
     animationColumns = 3;// 3 columns (based on 3x3 grid in run.png)
 
     
-    idleImage = nullptr;
+    combatIdleGrabber = nullptr;
     runImage = nullptr;
     runGrabber = nullptr;
 
 }
 
 Sprite::~Sprite() {
-    if (idleImage) al_destroy_bitmap(idleImage);
-    if (runImage) al_destroy_bitmap(runImage);
+    if (combatIdleGrabber) delete combatIdleGrabber;
     if (runGrabber) delete runGrabber;
+    if (runImage) al_destroy_bitmap(runImage);
+    if (jumpImage) al_destroy_bitmap(jumpImage);
+    if (slashImage) al_destroy_bitmap(slashImage);
+    if (slashReverseImage) al_destroy_bitmap(slashReverseImage);
+    if (hurtImage) al_destroy_bitmap(hurtImage);
 }
 
 void Sprite::Init(float startX, float startY) {
     x = startX;
     y = startY;
 
-    idleImage = al_load_bitmap("idle.png");
+    jumpImage = al_load_bitmap("jump.png");
+    slashImage = al_load_bitmap("slash_oversize.png");
+    slashReverseImage = al_load_bitmap("slash_reverse_oversize.png");
+    hurtImage = al_load_bitmap("hurt.png");
+
     runImage = al_load_bitmap("run.png");
 
-    if (!idleImage || !runImage) {
-        std::cerr << "Failed to load sprite images!\n";
+    ALLEGRO_BITMAP* combatIdleImage = al_load_bitmap("combat_idle.png");
+    if (!combatIdleImage) {
+        std::cerr << "Failed to load combat_idle.png!\n";
+        exit(1);
+    }
+    al_convert_mask_to_alpha(combatIdleImage, al_map_rgb(255, 0, 255));
+
+    // Assuming it's a 3x3 grid with 8 usable frames (like run.png)
+    std::vector<int> idleRows = { 1, 3 };
+    combatIdleGrabber = new SpriteGrabber(combatIdleImage, frameWidth, frameHeight, animationColumns, 9, idleRows);
+
+    al_destroy_bitmap(combatIdleImage);
+
+    if (!runImage) {
+        std::cerr << "Failed to load run.png!\n";
         exit(1);
     }
 
-    al_convert_mask_to_alpha(idleImage, al_map_rgb(255, 0, 255));
     al_convert_mask_to_alpha(runImage, al_map_rgb(255, 0, 255));
 
     std::vector<int> allowedRows = { 1, 3 };
@@ -74,9 +94,10 @@ void Sprite::Draw(int xOffset, int yOffset) {
     if (isMoving && runGrabber) {
         frame = runGrabber->getFrame(curFrame);
     }
-    else {
-        frame = idleImage;
+    else if (combatIdleGrabber) {
+        frame = combatIdleGrabber->getFrame(curFrame);
     }
+
 
     if (frame) {
         if (facingRight) {

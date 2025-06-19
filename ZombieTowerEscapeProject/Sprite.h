@@ -47,7 +47,14 @@ private:
     int frameCount, frameDelay;
     int animationColumns;
 
-    ALLEGRO_BITMAP* idleImage;
+    SpriteGrabber* combatIdleGrabber;
+
     ALLEGRO_BITMAP* runImage;
+    ALLEGRO_BITMAP* jumpImage;
+    ALLEGRO_BITMAP* slashImage;
+    ALLEGRO_BITMAP* slashReverseImage;
+    ALLEGRO_BITMAP* hurtImage;
+
+
     SpriteGrabber* runGrabber;
 };
