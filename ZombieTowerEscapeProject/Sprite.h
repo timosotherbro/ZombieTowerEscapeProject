@@ -41,6 +41,7 @@ private:
     float x, y;
     bool isMoving;
     bool facingRight;
+    bool isJumping;
 
     int frameWidth, frameHeight;
     int curFrame, maxFrame;
@@ -48,6 +49,7 @@ private:
     int animationColumns;
 
     SpriteGrabber* combatIdleGrabber;
+    SpriteGrabber* jumpGrabber;
 
     ALLEGRO_BITMAP* runImage;
     ALLEGRO_BITMAP* jumpImage;

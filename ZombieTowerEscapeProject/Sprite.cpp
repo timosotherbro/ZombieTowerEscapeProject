@@ -30,13 +30,13 @@ Sprite::~Sprite() {
     if (slashImage) al_destroy_bitmap(slashImage);
     if (slashReverseImage) al_destroy_bitmap(slashReverseImage);
     if (hurtImage) al_destroy_bitmap(hurtImage);
+    if (jumpGrabber) delete jumpGrabber;
 }
 
 void Sprite::Init(float startX, float startY) {
     x = startX;
     y = startY;
 
-    jumpImage = al_load_bitmap("jump.png");
     slashImage = al_load_bitmap("slash_oversize.png");
     slashReverseImage = al_load_bitmap("slash_reverse_oversize.png");
     hurtImage = al_load_bitmap("hurt.png");
@@ -53,6 +53,20 @@ void Sprite::Init(float startX, float startY) {
     // Assuming it's a 3x3 grid with 8 usable frames (like run.png)
     std::vector<int> idleRows = { 1, 3 };
     combatIdleGrabber = new SpriteGrabber(combatIdleImage, frameWidth, frameHeight, animationColumns, 9, idleRows);
+
+
+    ALLEGRO_BITMAP* jumpSheet = al_load_bitmap("jump.png");
+    if (!jumpSheet) {
+        std::cerr << "Failed to load jump.png!\n";
+        exit(1);
+    }
+    al_convert_mask_to_alpha(jumpSheet, al_map_rgb(255, 0, 255));
+
+    std::vector<int> jumpRows = { 1, 3 };  // rows 2 and 4
+    jumpGrabber = new SpriteGrabber(jumpSheet, frameWidth, frameHeight, 5, 20, jumpRows);  // 5 columns, 20 frames
+
+    al_destroy_bitmap(jumpSheet);  // only destroy after passing to grabber
+
 
     al_destroy_bitmap(combatIdleImage);
 
