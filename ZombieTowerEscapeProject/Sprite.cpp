@@ -7,8 +7,8 @@ Sprite::Sprite() {
     isMoving = false;
     facingRight = true; 
 
-    frameWidth = 32;   
-    frameHeight = 32;   
+    frameWidth = 64;   
+    frameHeight = 64;   
     curFrame = 0;
     maxFrame = 8;// Number of frames in run.png
     frameCount = 0;
@@ -80,13 +80,16 @@ void Sprite::Draw(int xOffset, int yOffset) {
 
     if (frame) {
         if (facingRight) {
-            al_draw_bitmap(frame, x - xOffset, y - yOffset, 0);
+            // Flip to face right
+            al_draw_bitmap(frame, x - xOffset, y - yOffset, ALLEGRO_FLIP_HORIZONTAL);
         }
         else {
-            al_draw_bitmap(frame, x - xOffset, y - yOffset, ALLEGRO_FLIP_HORIZONTAL);
+            // No flip = face left (original sprite direction)
+            al_draw_bitmap(frame, x - xOffset, y - yOffset, 0);
         }
     }
 }
+
 
 
 

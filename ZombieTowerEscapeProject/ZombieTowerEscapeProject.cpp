@@ -38,9 +38,9 @@ int main() {
     player.Init(100, 100);
 
     int currentLevel = 1;
-    char levelName[] = "level1.fmp";
+    char levelName[] = "zombietower1.fmp";
     if (MapLoad(levelName, 1)) {
-        al_show_native_message_box(display, "Error", "Map Load", "Could not load level1.fmp", NULL, 0);
+        al_show_native_message_box(display, "Error", "Map Load", "Could not load zombietower1.fmp", NULL, 0);
         return -1;
     }
 
@@ -202,7 +202,7 @@ int main() {
                 }
 
                 std::stringstream ss;
-                ss << "Level" << currentLevel << ".fmp";
+                ss << "zombietower" << currentLevel << ".fmp";
                 std::string nextMap = ss.str();
 
 
