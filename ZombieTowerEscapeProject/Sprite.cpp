@@ -15,6 +15,7 @@ Sprite::Sprite() {
     frameDelay = 6;
     animationColumns = 3;// 3 columns (based on 3x3 grid in run.png)
 
+    
     idleImage = nullptr;
     runImage = nullptr;
     runGrabber = nullptr;
@@ -39,23 +40,16 @@ void Sprite::Init(float startX, float startY) {
         exit(1);
     }
 
-    if (!runImage) {
-        std::cerr << "Failed to load run.png\n";
-        exit(1);
-
-        
-
-    }
-
-
-
-    // Convert magenta (255, 0, 255) to transparent
     al_convert_mask_to_alpha(idleImage, al_map_rgb(255, 0, 255));
     al_convert_mask_to_alpha(runImage, al_map_rgb(255, 0, 255));
 
-    runGrabber = new SpriteGrabber(runImage, frameWidth, frameHeight, animationColumns, maxFrame);
+    std::vector<int> allowedRows = { 1, 3 };
+    runGrabber = new SpriteGrabber(runImage, frameWidth, frameHeight, animationColumns, 9, allowedRows);
 
+    maxFrame = static_cast<int>(runGrabber->getTotalFrames());  // you'll add this method next
 }
+
+
 
 void Sprite::Update(bool moving, bool right) {
     isMoving = moving;

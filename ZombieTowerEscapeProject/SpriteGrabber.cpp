@@ -1,6 +1,8 @@
 #include "SpriteGrabber.h"
 #include <allegro5/allegro.h>
 #include <iostream>
+#include <algorithm>
+
 
 SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames, const std::vector<int>& allowedRows) {
     int totalCols = columns;
@@ -33,4 +35,18 @@ SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHei
 
     al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
     std::cout << "SpriteGrabber: " << framesAdded << " frame(s) loaded from allowed rows.\n";
+}
+
+SpriteGrabber::~SpriteGrabber() {
+    for (auto f : frames) {
+        al_destroy_bitmap(f);
+    }
+}
+
+
+ALLEGRO_BITMAP* SpriteGrabber::getFrame(int index) {
+    if (index >= 0 && index < static_cast<int>(frames.size())) {
+        return frames[index];
+    }
+    return nullptr;
 }

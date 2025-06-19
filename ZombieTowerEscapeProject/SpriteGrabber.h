@@ -8,6 +8,12 @@ public:
 
     ~SpriteGrabber();
 
+    int getTotalFrames() const { 
+        return static_cast<int>(frames.size());
+    }
+
+
+
     ALLEGRO_BITMAP* getFrame(int index);
 
 private:
