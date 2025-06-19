@@ -5,7 +5,7 @@
 Sprite::Sprite() {
     x = y = 0;
     isMoving = false;
-    facingRight = true;
+    facingRight = true; 
 
     frameWidth = 32;   
     frameHeight = 32;   
