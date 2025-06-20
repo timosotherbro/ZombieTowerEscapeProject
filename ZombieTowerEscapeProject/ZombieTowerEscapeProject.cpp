@@ -38,14 +38,14 @@ int main() {
 
     Sprite player;
 
-    const int TILE_SIZE = 32;  // Assuming tiles are 32x32 pixels
-    int spawnTileX = 23;
-    int spawnTileY = 16;
+    const int TILE_SIZE = 64;  
+    int spawnTileX = 2;
+    int spawnTileY = 22;
 
     int startX = spawnTileX * TILE_SIZE;
     int startY = spawnTileY * TILE_SIZE;
 
-    Sprite player;
+    
     player.Init(startX, startY);
 
 
@@ -134,11 +134,11 @@ int main() {
 
 
             if (!blocked) {
-                x = newX;
-                y = newY;
-                player.setX(x);
-                player.setY(y);
+                player.setX(newX);  // Handle horizontal movement only here
             }
+
+
+
 
             // -- Check if standing on solid ground --
             float feetX = player.getX() + player.getWidth() / 2;
@@ -154,8 +154,9 @@ int main() {
             float predictedY = player.getY() + player.getYVelocity();
 
             bool canFall =
-                !isBlockedAt(player.getX(), predictedY + player.getHeight()) &&
-                !isBlockedAt(player.getX() + player.getWidth() - 1, predictedY + player.getHeight());
+                !isBlockedAt(player.getX() + 2, predictedY + player.getHeight()) &&
+                !isBlockedAt(player.getX() + player.getWidth() - 3, predictedY + player.getHeight());
+
 
             if (!player.isOnGround() || player.getYVelocity() < 0) {
                 if (canFall) {
@@ -166,7 +167,14 @@ int main() {
                     // Landed
                     player.setOnGround(true);
                     player.setYVelocity(0);
+
+                    
+                    float snappedY = (int)((player.getY() + player.getHeight()) / mapblockheight) * mapblockheight - player.getHeight();
+                    player.setY(snappedY);
+
+                    player.setJumping(false);
                 }
+
             }
             else {
                 player.setYVelocity(0); // stays grounded
@@ -184,12 +192,7 @@ int main() {
             if (mapyoff > mapheight * mapblockheight - HEIGHT) mapyoff = mapheight * mapblockheight - HEIGHT;
 
 
-            if (keys[UP]) {
-                player.setJumping(true);
-            }
-            else {
-                player.setJumping(false);
-            }
+            
 
             
 

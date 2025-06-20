@@ -89,7 +89,7 @@ private:
 
     // In private section
     bool jumpPressed = false;
-    float jumpStrength = -12; // Negative = upward in screen coords
+    float jumpStrength = -20; // Negative = upward in screen coords
 
 
     int frameWidth, frameHeight;
@@ -102,13 +102,17 @@ private:
     bool isAttacking;
 
     float yVelocity = 0.0f;
-    float gravity = 0.6f;
+    float gravity = 0.3f;
     float maxFallSpeed = 12.0f;
     bool onGround = false;
 
 
     std::vector<ALLEGRO_BITMAP*> rightSlashFrames;
     std::vector<ALLEGRO_BITMAP*> leftSlashFrames;
+
+    std::vector<ALLEGRO_BITMAP*> rightJumpFrames;
+    std::vector<ALLEGRO_BITMAP*> leftJumpFrames;
+
 
 
     SpriteGrabber* combatIdleGrabber;

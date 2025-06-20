@@ -2,6 +2,8 @@
 #include <allegro5/allegro_image.h>
 #include <iostream>
 #include <string>
+#include <sstream>
+
 
 Sprite::Sprite() {
     x = y = 0;
@@ -44,11 +46,15 @@ Sprite::~Sprite() {
     if (slashImage) al_destroy_bitmap(slashImage);
     if (slashReverseImage) al_destroy_bitmap(slashReverseImage);
     if (hurtImage) al_destroy_bitmap(hurtImage);
-    if (jumpGrabber) delete jumpGrabber;
+    
     
 
     for (ALLEGRO_BITMAP* bmp : rightSlashFrames) al_destroy_bitmap(bmp);
     for (ALLEGRO_BITMAP* bmp : leftSlashFrames) al_destroy_bitmap(bmp);
+
+    for (auto bmp : rightJumpFrames) al_destroy_bitmap(bmp);
+    for (auto bmp : leftJumpFrames) al_destroy_bitmap(bmp);
+
 
 }
 
@@ -104,17 +110,28 @@ void Sprite::Init(float startX, float startY) {
 
 
 
-    ALLEGRO_BITMAP* jumpSheet = al_load_bitmap("jump.png");
-    if (!jumpSheet) {
-        std::cerr << "Failed to load jump.png!\n";
-        exit(1);
+    // Load right jump frames
+    for (int i = 1; i <= 5; i++) {
+        std::stringstream ss;
+        ss << "rightjump" << i << ".png";
+        ALLEGRO_BITMAP* frame = al_load_bitmap(ss.str().c_str());
+        if (frame) rightJumpFrames.push_back(frame);
     }
-    al_convert_mask_to_alpha(jumpSheet, al_map_rgb(255, 0, 255));
 
-    std::vector<int> jumpRows = { 1, 3 };  // rows 2 and 4
-    jumpGrabber = new SpriteGrabber(jumpSheet, frameWidth, frameHeight, 5, 20, jumpRows);  // 5 columns, 20 frames
+    // Load left jump frames
+    for (int i = 1; i <= 5; i++) {
+        std::stringstream ss;
+        ss << "leftjump" << i << ".png";
+        ALLEGRO_BITMAP* frame = al_load_bitmap(ss.str().c_str());
+        if (frame) leftJumpFrames.push_back(frame);
+    }
 
-    al_destroy_bitmap(jumpSheet);  // only destroy after passing to grabber
+
+    
+
+    
+
+    
 
 
     al_destroy_bitmap(combatIdleImage);
@@ -191,7 +208,7 @@ void Sprite::Update(bool moving, bool right) {
         if (yVelocity > maxFallSpeed) {
             yVelocity = maxFallSpeed;
         }
-        
+        y += yVelocity;
     }
     else {
         yVelocity = 0;
@@ -219,9 +236,14 @@ void Sprite::Draw(int xOffset, int yOffset) {
         }
     }
 
-    else if (isJumping && jumpGrabber) {
-        frame = jumpGrabber->getFrame(curFrame);
+    else if (isJumping) {
+        std::vector<ALLEGRO_BITMAP*>& jumpFrames = facingRight ? rightJumpFrames : leftJumpFrames;
+        if (!jumpFrames.empty()) {
+            int jumpFrame = curFrame % jumpFrames.size();
+            frame = jumpFrames[jumpFrame];
+        }
     }
+
     else if (isMoving && runGrabber) {
         frame = runGrabber->getFrame(curFrame);
         if (facingRight) {
@@ -231,6 +253,19 @@ void Sprite::Draw(int xOffset, int yOffset) {
     else if (combatIdleGrabber) {
         frame = combatIdleGrabber->getFrame(curFrame);
     }
+    else if (isJumping) {
+        std::vector<ALLEGRO_BITMAP*>& jumpFrames = facingRight ? rightJumpFrames : leftJumpFrames;
+        int jumpFrame = (al_get_time() * 10);  // 10 FPS
+        jumpFrame %= jumpFrames.size();
+        if (jumpFrames[jumpFrame]) {
+            al_draw_bitmap(jumpFrames[jumpFrame], x - xOffset, y - yOffset, 0);
+        }
+    }
+
+
+
+
+
 
     if (frame) {
         int drawX = x - xOffset + (frameWidth - al_get_bitmap_width(frame)) / 2;
