@@ -15,6 +15,8 @@ Sprite::Sprite() {
     frameDelay = 6;
     animationColumns = 3;// 3 columns (based on 3x3 grid in run.png)
 
+    isJumping = false;
+
     
     combatIdleGrabber = nullptr;
     runImage = nullptr;
@@ -89,41 +91,52 @@ void Sprite::Update(bool moving, bool right) {
     isMoving = moving;
     facingRight = right;
 
-    if (isMoving) {
-        if (++frameCount >= frameDelay) {
-            frameCount = 0;
-            curFrame++;
-            if (curFrame >= maxFrame)
-                curFrame = 0;
+    // Use different maxFrame based on state
+    int currentMaxFrame = 0;
+
+    if (isJumping && jumpGrabber) {
+        currentMaxFrame = static_cast<int>(jumpGrabber->getTotalFrames());
+    }
+    else if (isMoving && runGrabber) {
+        currentMaxFrame = static_cast<int>(runGrabber->getTotalFrames());
+    }
+    else if (combatIdleGrabber) {
+        currentMaxFrame = static_cast<int>(combatIdleGrabber->getTotalFrames());
+    }
+
+    if (++frameCount >= frameDelay) {
+        frameCount = 0;
+        curFrame++;
+        if (curFrame >= currentMaxFrame) {
+            curFrame = 0;
         }
     }
-    else {
-        curFrame = 0;
-    }
 }
+
 
 void Sprite::Draw(int xOffset, int yOffset) {
     ALLEGRO_BITMAP* frame = nullptr;
 
-    if (isMoving && runGrabber) {
+    if (isJumping && jumpGrabber) {
+        frame = jumpGrabber->getFrame(curFrame);
+    }
+    else if (isMoving && runGrabber) {
         frame = runGrabber->getFrame(curFrame);
     }
     else if (combatIdleGrabber) {
         frame = combatIdleGrabber->getFrame(curFrame);
     }
 
-
     if (frame) {
         if (facingRight) {
-            // Flip to face right
             al_draw_bitmap(frame, x - xOffset, y - yOffset, ALLEGRO_FLIP_HORIZONTAL);
         }
         else {
-            // No flip = face left (original sprite direction)
             al_draw_bitmap(frame, x - xOffset, y - yOffset, 0);
         }
     }
 }
+
 
 
 

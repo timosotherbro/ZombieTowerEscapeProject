@@ -11,6 +11,16 @@ public:
     void Update(bool isMoving, bool facingRight);
     void Draw(int xOffset, int yOffset);
 
+    void setJumping(bool jumping) { 
+        isJumping = jumping; 
+    }
+
+    void setAttacking(bool a) { 
+        isAttacking = a;
+    }
+
+
+
     float getX() const {
         return x; 
     }
@@ -48,8 +58,13 @@ private:
     int frameCount, frameDelay;
     int animationColumns;
 
+    bool isAttacking;
+
+
     SpriteGrabber* combatIdleGrabber;
     SpriteGrabber* jumpGrabber;
+    SpriteGrabber* slashGrabber;
+    SpriteGrabber* slashReverseGrabber;
 
     ALLEGRO_BITMAP* runImage;
     ALLEGRO_BITMAP* jumpImage;

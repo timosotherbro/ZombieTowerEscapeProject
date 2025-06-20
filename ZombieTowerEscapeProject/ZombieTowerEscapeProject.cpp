@@ -1,3 +1,5 @@
+//Charles Stoeter Final Project: Zombie Tower Escape
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
@@ -139,6 +141,12 @@ int main() {
             if (mapyoff > mapheight * mapblockheight - HEIGHT) mapyoff = mapheight * mapblockheight - HEIGHT;
 
 
+            if (keys[UP]) {
+                player.setJumping(true);
+            }
+            else {
+                player.setJumping(false);
+            }
 
             // Update animation
             player.Update(isMoving, faceRight);
