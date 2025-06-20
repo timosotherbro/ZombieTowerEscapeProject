@@ -4,7 +4,12 @@
 
 class SpriteGrabber {
 public:
-    SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames, const std::vector<int>& allowedRows);
+    SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames,
+        const std::vector<int>& allowedRows);
+
+    
+    SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames,
+        const std::vector<int>& allowedRows, const std::vector<int>& allowedCols);
 
     ~SpriteGrabber();
 

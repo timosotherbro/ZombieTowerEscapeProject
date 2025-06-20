@@ -231,8 +231,12 @@ int main() {
             case ALLEGRO_KEY_RIGHT: keys[RIGHT] = true; break;
             case ALLEGRO_KEY_UP: keys[UP] = true; break;
             case ALLEGRO_KEY_DOWN: keys[DOWN] = true; break;
+            case ALLEGRO_KEY_SPACE:
+                player.setAttacking(true);
+                break;
             }
-        }
+}
+
         else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
             switch (ev.keyboard.keycode) {
             case ALLEGRO_KEY_LEFT: keys[LEFT] = false; break;

@@ -58,6 +58,8 @@ private:
     int frameCount, frameDelay;
     int animationColumns;
 
+    bool lastDirectionRight;
+
     bool isAttacking;
 
 
@@ -65,6 +67,8 @@ private:
     SpriteGrabber* jumpGrabber;
     SpriteGrabber* slashGrabber;
     SpriteGrabber* slashReverseGrabber;
+    
+
 
     ALLEGRO_BITMAP* runImage;
     ALLEGRO_BITMAP* jumpImage;

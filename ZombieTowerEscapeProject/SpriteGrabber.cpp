@@ -4,7 +4,19 @@
 #include <algorithm>
 
 
-SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames, const std::vector<int>& allowedRows) {
+
+SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames,
+    const std::vector<int>& allowedRows)
+    : SpriteGrabber(sheet, frameWidth, frameHeight, columns, totalFrames, allowedRows, std::vector<int>()) {
+}
+
+
+SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames,
+    const std::vector<int>& allowedRows, const std::vector<int>& allowedCols)
+{
+    // existing constructor code
+
+
     int totalCols = columns;
     int framesAdded = 0;
 
@@ -12,9 +24,14 @@ SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHei
         int col = i % totalCols;
         int row = i / totalCols;
 
-        // Only proceed if the current row is allowed
-        if (std::find(allowedRows.begin(), allowedRows.end(), row) == allowedRows.end())
+        if (std::find(allowedRows.begin(), allowedRows.end(), row) == allowedRows.end()) {
             continue;
+        }
+            
+        if (!allowedCols.empty() && std::find(allowedCols.begin(), allowedCols.end(), col) == allowedCols.end()) {
+            continue;
+        }
+
 
         int x = col * frameWidth;
         int y = row * frameHeight;
