@@ -102,7 +102,7 @@ private:
     bool isAttacking;
 
     float yVelocity = 0.0f;
-    float gravity = 0.3f;
+    float gravity = 0.45f;
     float maxFallSpeed = 12.0f;
     bool onGround = false;
 
@@ -112,6 +112,10 @@ private:
 
     std::vector<ALLEGRO_BITMAP*> rightJumpFrames;
     std::vector<ALLEGRO_BITMAP*> leftJumpFrames;
+
+    std::vector<ALLEGRO_BITMAP*> leftIdleFrames;
+    std::vector<ALLEGRO_BITMAP*> rightIdleFrames;
+
 
 
 

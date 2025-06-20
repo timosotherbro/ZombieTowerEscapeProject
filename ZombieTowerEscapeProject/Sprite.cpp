@@ -67,15 +67,26 @@ void Sprite::Init(float startX, float startY) {
 
     runImage = al_load_bitmap("run.png");
 
-    ALLEGRO_BITMAP* combatIdleImage = al_load_bitmap("combat_idle.png");
-    if (!combatIdleImage) {
-        std::cerr << "Failed to load combat_idle.png!\n";
-        exit(1);
+    // Load right idle frames
+    for (int i = 1; i <= 2; ++i) {
+        std::string filename = "rightidle" + std::to_string(i) + ".png";
+        ALLEGRO_BITMAP* bmp = al_load_bitmap(filename.c_str());
+        if (bmp) {
+            al_convert_mask_to_alpha(bmp, al_map_rgb(255, 0, 255));
+            rightIdleFrames.push_back(bmp);
+        }
     }
-    al_convert_mask_to_alpha(combatIdleImage, al_map_rgb(255, 0, 255));
 
-    std::vector<int> idleRows = { 1, 3 };  // rows 2 and 4
-    combatIdleGrabber = new SpriteGrabber(combatIdleImage, frameWidth, frameHeight, 2, 8, idleRows);
+    // Load left idle frames
+    for (int i = 1; i <= 2; ++i) {
+        std::string filename = "leftidle" + std::to_string(i) + ".png";
+        ALLEGRO_BITMAP* bmp = al_load_bitmap(filename.c_str());
+        if (bmp) {
+            al_convert_mask_to_alpha(bmp, al_map_rgb(255, 0, 255));
+            leftIdleFrames.push_back(bmp);
+        }
+    }
+
 
 
 
@@ -134,7 +145,7 @@ void Sprite::Init(float startX, float startY) {
     
 
 
-    al_destroy_bitmap(combatIdleImage);
+
 
     if (!runImage) {
         std::cerr << "Failed to load run.png!\n";
@@ -186,6 +197,11 @@ void Sprite::Update(bool moving, bool right) {
     else if (combatIdleGrabber) {
         currentMaxFrame = static_cast<int>(combatIdleGrabber->getTotalFrames());
     }
+    else if (!isMoving && !isJumping) {
+        currentMaxFrame = facingRight ? static_cast<int>(rightIdleFrames.size())
+            : static_cast<int>(leftIdleFrames.size());
+    }
+
 
 
 
@@ -261,6 +277,15 @@ void Sprite::Draw(int xOffset, int yOffset) {
             al_draw_bitmap(jumpFrames[jumpFrame], x - xOffset, y - yOffset, 0);
         }
     }
+
+    else if (!isMoving && !isJumping) {
+        std::vector<ALLEGRO_BITMAP*>& idleFrames = facingRight ? rightIdleFrames : leftIdleFrames;
+        if (!idleFrames.empty()) {
+            int idleFrame = curFrame % idleFrames.size();
+            frame = idleFrames[idleFrame];
+        }
+    }
+
 
 
 

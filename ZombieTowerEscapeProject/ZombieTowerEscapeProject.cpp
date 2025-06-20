@@ -60,6 +60,7 @@ int main() {
     enum { LEFT, RIGHT, UP, DOWN };
     bool running = true;
     bool redraw = true;
+    bool hasKey = false;
     double startTime = al_get_time();
 
     const double TIME_LIMIT = 60.0;
@@ -97,17 +98,19 @@ int main() {
             float newX = x;
             float newY = y;
 
-            // Predict next position
+            const float MOVE_SPEED = 3.5f;
+
             if (keys[LEFT]) {
-                newX -= 2;
+                newX -= MOVE_SPEED;
                 isMoving = true;
                 faceRight = false;
             }
             if (keys[RIGHT]) {
-                newX += 2;
+                newX += MOVE_SPEED;
                 isMoving = true;
                 faceRight = true;
             }
+
             if (keys[UP]) {
                
                 
@@ -242,27 +245,36 @@ int main() {
 
             MapChangeLayer(1);
 
-            auto isAtGoal = [](float px, float py) {
+            auto getUser1At = [](float px, float py) -> int {
                 int tileX = px / mapblockwidth;
                 int tileY = py / mapblockheight;
                 BLKSTR* b = MapGetBlock(tileX, tileY);
-                if (b) {
-                    std::cout << "Goal Check: tile (" << tileX << "," << tileY << ") user1=" << b->user1 << std::endl;
-                    return b->user1 == 8;
-                }
-                return false;
+                if (b) return b->user1;
+                return -1;  // means no block or no user1
                 };
+
 
             // check all 4 corners of sprite
             float centerX = player.getX() + player.getWidth() / 2;
-            float bottomY = player.getY() + player.getHeight(); // instead of -2
+            float bottomY = player.getY() + player.getHeight();
 
+            int user = getUser1At(centerX, bottomY);
 
-            bool atGoal = isAtGoal(centerX, bottomY);
+            switch (user) {
+            case 3: // Spike
+                std::cout << "Player hit spike! Restarting level...\n";
+                player.setX(startX);
+                player.setY(startY);
+                startTime = al_get_time(); // reset timer too if you want
+                break;
 
+            case 5: // Ladder
+                std::cout << "On ladder!\n";
+                // Optional: Set player.setOnLadder(true); if you implement ladder climbing
+                break;
 
-
-            if (atGoal) {
+            case 8: { // Door to next level
+                std::cout << "Reached exit!\n";
 
                 double time = al_get_time() - startTime;
                 std::cout << "Level " << currentLevel << " Complete in " << time << " seconds!\n";
@@ -271,21 +283,46 @@ int main() {
                 currentLevel++;
                 if (currentLevel > 3) {
                     running = false;
-                    continue;
+                    break;
                 }
 
                 std::stringstream ss;
                 ss << "zombietower" << currentLevel << ".fmp";
                 std::string nextMap = ss.str();
 
-
                 if (MapLoad(const_cast<char*>(nextMap.c_str()), 1)) {
                     al_show_native_message_box(display, "Error", "Map Load", "Could not load next map", NULL, 0);
                     running = false;
+                    break;
                 }
-                player.setX(100); player.setY(100);
+
+                player.setX(100);
+                player.setY(100);
                 startTime = al_get_time();
+                break;
             }
+            case 9: // Key
+                std::cout << "Picked up key!\n";
+                hasKey = true;
+
+                // Clear the key tile visually and logically
+                {
+                    int tileX = centerX / mapblockwidth;
+                    int tileY = bottomY / mapblockheight;
+                    BLKSTR* block = MapGetBlock(tileX, tileY);
+                    if (block) {
+                        block->user1 = 0;
+                    }
+                }
+                break;
+
+
+            default:
+                break;
+            }
+
+
+            
 
             redraw = true;
         }
