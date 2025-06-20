@@ -15,6 +15,9 @@ public:
         isJumping = jumping; 
     }
 
+    
+
+
     void setAttacking(bool a) { 
         isAttacking = a;
     }
@@ -47,11 +50,47 @@ public:
     }
 
 
+    void setOnGround(bool grounded) {
+        onGround = grounded;
+        if (grounded) yVelocity = 0;  // stop falling if grounded
+    }
+
+    void startJump() {
+        if (onGround) {
+            yVelocity = jumpStrength;
+            onGround = false;
+            isJumping = true;
+        }
+    }
+
+
+    float getYVelocity() const { 
+        return yVelocity;
+
+    }
+    void setYVelocity(float vy) {
+        yVelocity = vy;
+    }
+
+    bool isOnGround() const { 
+        return onGround; 
+    }
+
+    
+
+
+
+
 private:
     float x, y;
     bool isMoving;
     bool facingRight;
     bool isJumping;
+
+    // In private section
+    bool jumpPressed = false;
+    float jumpStrength = -12; // Negative = upward in screen coords
+
 
     int frameWidth, frameHeight;
     int curFrame, maxFrame;

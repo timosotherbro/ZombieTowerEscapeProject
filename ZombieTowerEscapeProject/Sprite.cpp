@@ -27,6 +27,13 @@ Sprite::Sprite() {
     runImage = nullptr;
     runGrabber = nullptr;
 
+
+    gravity = 0.5f;
+    jumpStrength = -10.0f;
+    yVelocity = 0;
+    onGround = false;
+
+
 }
 
 Sprite::~Sprite() {
@@ -164,6 +171,8 @@ void Sprite::Update(bool moving, bool right) {
     }
 
 
+
+
     if (++frameCount >= frameDelay) {
         frameCount = 0;
         curFrame++;
@@ -174,6 +183,23 @@ void Sprite::Update(bool moving, bool right) {
             }
         }
     }
+
+
+    // Apply gravity if not on ground
+    if (!onGround) {
+        yVelocity += gravity;
+        if (yVelocity > maxFallSpeed) {
+            yVelocity = maxFallSpeed;
+        }
+        
+    }
+    else {
+        yVelocity = 0;
+    }
+
+
+
+
 }
 
 
@@ -213,6 +239,7 @@ void Sprite::Draw(int xOffset, int yOffset) {
     }
 
 }
+
 
 
 

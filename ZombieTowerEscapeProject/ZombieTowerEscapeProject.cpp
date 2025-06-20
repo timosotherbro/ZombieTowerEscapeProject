@@ -37,7 +37,17 @@ int main() {
     al_register_event_source(queue, al_get_keyboard_event_source());
 
     Sprite player;
-    player.Init(100, 100);
+
+    const int TILE_SIZE = 32;  // Assuming tiles are 32x32 pixels
+    int spawnTileX = 23;
+    int spawnTileY = 16;
+
+    int startX = spawnTileX * TILE_SIZE;
+    int startY = spawnTileY * TILE_SIZE;
+
+    Sprite player;
+    player.Init(startX, startY);
+
 
     int currentLevel = 1;
     char levelName[] = "zombietower1.fmp";
@@ -96,12 +106,11 @@ int main() {
                 faceRight = true;
             }
             if (keys[UP]) {
-                newY -= 2;
-                isMoving = true;
+               
+                
             }
             if (keys[DOWN]) {
-                newY += 2;
-                isMoving = true;
+                
             }
 
             MapChangeLayer(1);
@@ -131,6 +140,40 @@ int main() {
                 player.setY(y);
             }
 
+            // -- Check if standing on solid ground --
+            float feetX = player.getX() + player.getWidth() / 2;
+            float feetY = player.getY() + player.getHeight(); // bottom center
+
+            if (!player.isOnGround()) {
+                player.setYVelocity(player.getYVelocity() + 0.6f);  // Gravity strength
+                if (player.getYVelocity() > 8.0f)  // Cap fall speed
+                    player.setYVelocity(8.0f);
+            }
+
+            // Apply gravity logic using predictedY
+            float predictedY = player.getY() + player.getYVelocity();
+
+            bool canFall =
+                !isBlockedAt(player.getX(), predictedY + player.getHeight()) &&
+                !isBlockedAt(player.getX() + player.getWidth() - 1, predictedY + player.getHeight());
+
+            if (!player.isOnGround() || player.getYVelocity() < 0) {
+                if (canFall) {
+                    player.setY(predictedY);
+                    player.setOnGround(false);
+                }
+                else {
+                    // Landed
+                    player.setOnGround(true);
+                    player.setYVelocity(0);
+                }
+            }
+            else {
+                player.setYVelocity(0); // stays grounded
+            }
+
+
+
             mapxoff = player.getX() + player.getWidth() / 2 - WIDTH / 2;
             mapyoff = player.getY() + player.getHeight() / 2 - HEIGHT / 2;
 
@@ -147,6 +190,10 @@ int main() {
             else {
                 player.setJumping(false);
             }
+
+            
+
+            
 
             // Update animation
             player.Update(isMoving, faceRight);
@@ -229,7 +276,10 @@ int main() {
             case ALLEGRO_KEY_ESCAPE: running = false; break;
             case ALLEGRO_KEY_LEFT: keys[LEFT] = true; break;
             case ALLEGRO_KEY_RIGHT: keys[RIGHT] = true; break;
-            case ALLEGRO_KEY_UP: keys[UP] = true; break;
+            case ALLEGRO_KEY_UP:
+                keys[UP] = true;
+                player.startJump(); // <-- triggers jump if on ground
+                break;
             case ALLEGRO_KEY_DOWN: keys[DOWN] = true; break;
             case ALLEGRO_KEY_SPACE:
                 player.setAttacking(true);
