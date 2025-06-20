@@ -85,6 +85,9 @@ int main() {
         else if (ev.type == ALLEGRO_EVENT_TIMER) {
             // Movement
 
+            MapUpdateAnims();
+
+
             float x = player.getX();
             float y = player.getY();
 
@@ -141,24 +144,35 @@ int main() {
 
 
             // -- Check if standing on solid ground --
-            float feetX = player.getX() + player.getWidth() / 2;
-            float feetY = player.getY() + player.getHeight(); // bottom center
-
-            if (!player.isOnGround()) {
-                player.setYVelocity(player.getYVelocity() + 0.6f);  // Gravity strength
-                if (player.getYVelocity() > 8.0f)  // Cap fall speed
-                    player.setYVelocity(8.0f);
-            }
-
             // Apply gravity logic using predictedY
-            float predictedY = player.getY() + player.getYVelocity();
+            // Gravity-based movement
+            float velocityY = player.getYVelocity();
+            float predictedY = player.getY() + velocityY;
 
-            bool canFall =
-                !isBlockedAt(player.getX() + 2, predictedY + player.getHeight()) &&
-                !isBlockedAt(player.getX() + player.getWidth() - 3, predictedY + player.getHeight());
+            // Headbutt check (moving up)
+            if (velocityY < 0) {
+                bool hitCeiling =
+                    isBlockedAt(player.getX() + 2, predictedY) ||
+                    isBlockedAt(player.getX() + player.getWidth() - 3, predictedY);
 
+                if (hitCeiling) {
+                    player.setYVelocity(0);
 
-            if (!player.isOnGround() || player.getYVelocity() < 0) {
+                    float ceilingY = ((int)(player.getY() / mapblockheight)) * mapblockheight;
+                    player.setY(ceilingY + 1);  // Push slightly down so they don't get stuck
+                }
+                else {
+                    player.setY(predictedY);
+                    player.setOnGround(false);
+                }
+
+            }
+            // Falling or on air
+            else if (velocityY > 0 || !player.isOnGround()) {
+                bool canFall =
+                    !isBlockedAt(player.getX() + 2, predictedY + player.getHeight()) &&
+                    !isBlockedAt(player.getX() + player.getWidth() - 3, predictedY + player.getHeight());
+
                 if (canFall) {
                     player.setY(predictedY);
                     player.setOnGround(false);
@@ -167,19 +181,20 @@ int main() {
                     // Landed
                     player.setOnGround(true);
                     player.setYVelocity(0);
-
-                    
-                    float snappedY = (int)((player.getY() + player.getHeight()) / mapblockheight) * mapblockheight - player.getHeight();
+                    float snappedY = ((int)((player.getY() + player.getHeight()) / mapblockheight)) * mapblockheight - player.getHeight();
                     player.setY(snappedY);
-
                     player.setJumping(false);
                 }
-
-            }
-            else {
-                player.setYVelocity(0); // stays grounded
             }
 
+
+        
+
+
+            
+
+
+            
 
 
             mapxoff = player.getX() + player.getWidth() / 2 - WIDTH / 2;

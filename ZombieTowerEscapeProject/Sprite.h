@@ -89,7 +89,7 @@ private:
 
     // In private section
     bool jumpPressed = false;
-    float jumpStrength = -20; // Negative = upward in screen coords
+    float jumpStrength = -16; // Negative = upward in screen coords
 
 
     int frameWidth, frameHeight;
