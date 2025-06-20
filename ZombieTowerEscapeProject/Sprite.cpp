@@ -1,6 +1,7 @@
 ﻿#include "Sprite.h"
 #include <allegro5/allegro_image.h>
 #include <iostream>
+#include <string>
 
 Sprite::Sprite() {
     x = y = 0;
@@ -37,8 +38,10 @@ Sprite::~Sprite() {
     if (slashReverseImage) al_destroy_bitmap(slashReverseImage);
     if (hurtImage) al_destroy_bitmap(hurtImage);
     if (jumpGrabber) delete jumpGrabber;
-    if (slashGrabber) delete slashGrabber;
-    if (slashReverseGrabber) delete slashReverseGrabber;
+    
+
+    for (ALLEGRO_BITMAP* bmp : rightSlashFrames) al_destroy_bitmap(bmp);
+    for (ALLEGRO_BITMAP* bmp : leftSlashFrames) al_destroy_bitmap(bmp);
 
 }
 
@@ -64,20 +67,32 @@ void Sprite::Init(float startX, float startY) {
 
 
     // Load slash image
-    slashImage = al_load_bitmap("slash_oversize.png");
-    if (!slashImage) {
-        std::cerr << "Failed to load slash_oversize.png!\n";
-        exit(1);
+   // Load right slash frames
+    for (int i = 1; i <= 6; ++i) {
+        std::string filename = "rightslash" + std::to_string(i) + ".png";
+        ALLEGRO_BITMAP* bmp = al_load_bitmap(filename.c_str());
+        if (!bmp) {
+            std::cerr << "Failed to load " << filename << "\n";
+            exit(1);
+        }
+        al_convert_mask_to_alpha(bmp, al_map_rgb(255, 0, 255));
+        rightSlashFrames.push_back(bmp);
     }
-    al_convert_mask_to_alpha(slashImage, al_map_rgb(255, 0, 255));
 
-    // Slice row 2 (left-facing)
-    std::vector<int> slashLeftRows = { 1 };
-    slashGrabber = new SpriteGrabber(slashImage, frameWidth, frameHeight, 6, 24, slashLeftRows);
+    // Load left slash frames
+    for (int i = 1; i <= 6; ++i) {
+        std::string filename = "leftslash" + std::to_string(i) + ".png";
+        ALLEGRO_BITMAP* bmp = al_load_bitmap(filename.c_str());
+        if (!bmp) {
+            std::cerr << "Failed to load " << filename << "\n";
+            exit(1);
+        }
+        al_convert_mask_to_alpha(bmp, al_map_rgb(255, 0, 255));
+        leftSlashFrames.push_back(bmp);
+    }
 
-    // Slice row 4 (right-facing)
-    std::vector<int> slashRightRows = { 3 };
-    slashReverseGrabber = new SpriteGrabber(slashImage, frameWidth, frameHeight, 6, 24, slashRightRows);
+
+
 
 
 
@@ -105,24 +120,9 @@ void Sprite::Init(float startX, float startY) {
     al_convert_mask_to_alpha(runImage, al_map_rgb(255, 0, 255));
 
 
-    // Load and slice slash_oversize.png
-    slashImage = al_load_bitmap("slash_oversize.png");
-    if (!slashImage) {
-        std::cerr << "Failed to load slash_oversize.png!\n";
-        exit(1);
-    }
-    al_convert_mask_to_alpha(slashImage, al_map_rgb(255, 0, 255));
-    std::vector<int> slashRows = { 1, 3 };
-    slashGrabber = new SpriteGrabber(slashImage, frameWidth, frameHeight, 5, 20, slashRows);
-
-    // Load and slice slash_reverse_oversize.png
-    slashReverseImage = al_load_bitmap("slash_reverse_oversize.png");
-    if (!slashReverseImage) {
-        std::cerr << "Failed to load slash_reverse_oversize.png!\n";
-        exit(1);
-    }
-    al_convert_mask_to_alpha(slashReverseImage, al_map_rgb(255, 0, 255));
-    slashReverseGrabber = new SpriteGrabber(slashReverseImage, frameWidth, frameHeight, 5, 20, slashRows);
+    
+    
+    
 
 
 
@@ -145,12 +145,14 @@ void Sprite::Update(bool moving, bool right) {
 
     int currentMaxFrame = 0;
 
-    if (isAttacking && facingRight && slashGrabber) {
-        currentMaxFrame = static_cast<int>(slashGrabber->getTotalFrames());
+    if (isAttacking) {
+        if (facingRight && !rightSlashFrames.empty())
+            currentMaxFrame = static_cast<int>(rightSlashFrames.size());
+        else if (!facingRight && !leftSlashFrames.empty())
+            currentMaxFrame = static_cast<int>(leftSlashFrames.size());
     }
-    else if (isAttacking && !facingRight && slashReverseGrabber) {
-        currentMaxFrame = static_cast<int>(slashReverseGrabber->getTotalFrames());
-    }
+
+
     else if (isJumping && jumpGrabber) {
         currentMaxFrame = static_cast<int>(jumpGrabber->getTotalFrames());
     }
@@ -180,34 +182,40 @@ void Sprite::Update(bool moving, bool right) {
 
 void Sprite::Draw(int xOffset, int yOffset) {
     ALLEGRO_BITMAP* frame = nullptr;
+    int flags = 0;  // by default no flipping
 
     if (isAttacking) {
-        if (facingRight && slashGrabber) {
-            frame = slashGrabber->getFrame(curFrame);
+        if (facingRight && curFrame < rightSlashFrames.size()) {
+            frame = rightSlashFrames[curFrame];
         }
-        else if (!facingRight && slashReverseGrabber) {
-            frame = slashReverseGrabber->getFrame(curFrame);
+        else if (!facingRight && curFrame < leftSlashFrames.size()) {
+            frame = leftSlashFrames[curFrame];
         }
     }
+
     else if (isJumping && jumpGrabber) {
         frame = jumpGrabber->getFrame(curFrame);
     }
     else if (isMoving && runGrabber) {
         frame = runGrabber->getFrame(curFrame);
+        if (facingRight) {
+            flags = ALLEGRO_FLIP_HORIZONTAL;  // flip run animation only
+        }
     }
     else if (combatIdleGrabber) {
         frame = combatIdleGrabber->getFrame(curFrame);
     }
 
-
     if (frame) {
-        bool needsFlip = lastDirectionRight;
-
-        int flags = needsFlip ? ALLEGRO_FLIP_HORIZONTAL : 0;
-        al_draw_bitmap(frame, x - xOffset, y - yOffset, flags);
-
+        int drawX = x - xOffset + (frameWidth - al_get_bitmap_width(frame)) / 2;
+        int drawY = y - yOffset + (frameHeight - al_get_bitmap_height(frame)) / 2;
+        al_draw_bitmap(frame, drawX, drawY, flags);
     }
+
 }
+
+
+
 
 
 

@@ -62,12 +62,21 @@ private:
 
     bool isAttacking;
 
+    float yVelocity = 0.0f;
+    float gravity = 0.6f;
+    float maxFallSpeed = 12.0f;
+    bool onGround = false;
+
+
+    std::vector<ALLEGRO_BITMAP*> rightSlashFrames;
+    std::vector<ALLEGRO_BITMAP*> leftSlashFrames;
+
 
     SpriteGrabber* combatIdleGrabber;
     SpriteGrabber* jumpGrabber;
-    SpriteGrabber* slashGrabber;
-    SpriteGrabber* slashReverseGrabber;
     
+    
+
 
 
     ALLEGRO_BITMAP* runImage;
