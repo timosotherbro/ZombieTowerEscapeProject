@@ -179,6 +179,13 @@ void Sprite::Init(float startX, float startY) {
 void Sprite::Update(bool moving, bool right) {
     isMoving = moving;
 
+    if (isDead) {
+        deathAngle += 0.1f;        // slowly spin
+        deathScale -= 0.01f;       // slowly shrink
+        if (deathScale < 0.1f) deathScale = 0.1f;  // clamp
+        return; // skip normal updates when dead
+    }
+
     
     if (moving) {
         facingRight = right;
@@ -323,10 +330,24 @@ void Sprite::Draw(int xOffset, int yOffset) {
 
 
     if (frame) {
-        int drawX = x - xOffset + (frameWidth - al_get_bitmap_width(frame)) / 2;
-        int drawY = y - yOffset + (frameHeight - al_get_bitmap_height(frame)) / 2;
-        al_draw_bitmap(frame, drawX, drawY, flags);
+        int centerX = x - xOffset + frameWidth / 2;
+        int centerY = y - yOffset + frameHeight / 2;
+
+        if (isDead) {
+            al_draw_scaled_rotated_bitmap(
+                frame,
+                frameWidth / 2, frameHeight / 2, // center of rotation
+                centerX, centerY,               // position on screen
+                deathScale, deathScale,         // scale
+                deathAngle,                     // rotation angle
+                0                               // flags
+            );
+        }
+        else {
+            al_draw_bitmap(frame, centerX - frameWidth / 2, centerY - frameHeight / 2, flags);
+        }
     }
+
 
     if (!onLadder && state == "climb") {
         state = "";  // Reset state when off ladder
@@ -336,7 +357,11 @@ void Sprite::Draw(int xOffset, int yOffset) {
 
 }
 
-
+void Sprite::triggerDeathAnimation() {
+    isDead = true;
+    deathAngle = 0.0f;
+    deathScale = 1.0f;
+}
 
 
 

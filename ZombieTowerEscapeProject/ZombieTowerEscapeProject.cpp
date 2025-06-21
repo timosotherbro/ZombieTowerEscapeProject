@@ -146,7 +146,7 @@ int main() {
     bool hasKey = false;
     double startTime = al_get_time();
 
-    const double TIME_LIMIT = 60.0;
+    double timeLimit = 60.0;
     ALLEGRO_FONT* font = al_load_ttf_font("toxia.ttf", 24, 0);
     if (!font) {
         al_show_native_message_box(display, "Error", "Font Load", "Could not load font!", NULL, 0);
@@ -400,11 +400,11 @@ int main() {
             player.Update(isMoving, faceRight);
 
             double timeElapsed = al_get_time() - startTime;
-            if (timeElapsed >= TIME_LIMIT) {
+            if (timeElapsed >= timeLimit) {
                 std::cout << "Time's up! Game Over.\n";
                 al_rest(2.0); // short pause to show message
 
-                if (timeElapsed >= TIME_LIMIT) {
+                if (timeElapsed >= timeLimit) {
                     std::cout << "Time's up! Game Over.\n";
                     al_clear_to_color(al_map_rgb(0, 0, 0));
                     al_draw_text(font, al_map_rgb(255, 0, 0), WIDTH / 2, HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER");
@@ -450,13 +450,28 @@ int main() {
 
                 if (playerHealth <= 0) {
                     std::cout << "Player died! Game Over.\n";
+
+                    player.triggerDeathAnimation();
+                    al_clear_to_color(al_map_rgb(0, 0, 0));
+
+                    double deathStart = al_get_time();
+                    while (al_get_time() - deathStart < 2.5) {
+                        player.Update(false, true); // just update death animation
+                        player.Draw(mapxoff, mapyoff);
+                        al_flip_display();
+                        al_clear_to_color(al_map_rgb(0, 0, 0));
+                        al_rest(1.0 / 60);
+                    }
                     al_clear_to_color(al_map_rgb(0, 0, 0));
                     al_draw_text(font, al_map_rgb(255, 0, 0), WIDTH / 2, HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "YOU DIED");
                     al_flip_display();
                     al_rest(2.0);
+
+
                     running = false;
                     break;
                 }
+
 
                 // Respawn
                 player.setX(startX);
@@ -492,6 +507,18 @@ int main() {
 
                 std::stringstream ss;
                 ss << "zombietower" << currentLevel << ".fmp";
+
+                if (currentLevel == 1) {
+                    timeLimit = 60.0;
+                }
+                else if (currentLevel == 2) {
+
+                    timeLimit = 50.0;
+                }
+                else if (currentLevel == 3) {
+                    timeLimit = 40.0;
+                }
+
                 std::string nextMap = ss.str();
 
                 if (MapLoad(const_cast<char*>(nextMap.c_str()), 1)) {
@@ -599,10 +626,10 @@ int main() {
             al_draw_filled_rectangle(0, 0, WIDTH, 60, al_map_rgb(30, 30, 30));
 
             // ----- Time Left -----
-            double timeLeft = TIME_LIMIT - (al_get_time() - startTime);
+            double timeLeft = timeLimit - (al_get_time() - startTime);
             if (timeLeft < 0) timeLeft = 0;
 
-            float barWidth = (WIDTH - 400) * (timeLeft / TIME_LIMIT); // Shrink bar over time
+            float barWidth = (WIDTH - 400) * (timeLeft / timeLimit); // Shrink bar over time
             al_draw_filled_rectangle(10, 10, 10 + barWidth, 30, al_map_rgb(0, 200, 0));
             al_draw_rectangle(10, 10, WIDTH - 390, 30, al_map_rgb(255, 255, 255), 2);
 

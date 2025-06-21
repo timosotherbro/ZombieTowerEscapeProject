@@ -21,6 +21,7 @@ public:
     
 
 
+
     void setAttacking(bool a) { 
         isAttacking = a;
     }
@@ -87,6 +88,10 @@ public:
         return onLadder;
     }
 
+    void triggerDeathAnimation();
+    bool getIsDead() const { 
+        return isDead;
+    }
 
 
 
@@ -102,6 +107,10 @@ private:
     // In private section
     bool jumpPressed = false;
     float jumpStrength = -16; // Negative = upward in screen coords
+
+    bool isDead = false;
+    float deathAngle = 0.0f;
+    float deathScale = 1.0f;
 
 
     int frameWidth, frameHeight;
@@ -119,6 +128,7 @@ private:
     bool onGround = false;
 
     float climbSpeed = 2.0f;
+
 
 
     int currentFrame = 0;
