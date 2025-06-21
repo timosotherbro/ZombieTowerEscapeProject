@@ -42,7 +42,7 @@ int main() {
         std::cerr << "Failed to initialize acodec!\n";
         return -1;
     }
-    if (!al_reserve_samples(1)) {
+    if (!al_reserve_samples(8)) {
         std::cerr << "Failed to reserve samples!\n";
         return -1;
     }
@@ -57,7 +57,7 @@ int main() {
     ALLEGRO_SAMPLE* bgMusic = al_load_sample("backgroundmusic.ogg");
     ALLEGRO_SAMPLE_ID bgMusicID;
 
-    ALLEGRO_SAMPLE* ladderSound = nullptr;
+    
 
 
     
@@ -72,11 +72,7 @@ int main() {
     }
 
 
-    ladderSound = al_load_sample("ladder.wav");
-    if (!ladderSound) {
-        al_show_native_message_box(display, "Error", "Audio Load", "Could not load ladder.wav", NULL, 0);
-        return -1;
-    }
+    
 
     ALLEGRO_SAMPLE* victorySound = al_load_sample("victory.wav");
     if (!victorySound) {
@@ -89,6 +85,13 @@ int main() {
         al_show_native_message_box(display, "Error", "Audio Load", "Could not load door.wav", NULL, 0);
         return -1;
     }
+
+    ALLEGRO_SAMPLE* keySound = al_load_sample("key.wav");
+    if (!keySound) {
+        al_show_native_message_box(display, "Error", "Audio Load", "Could not load key.wav", NULL, 0);
+        return -1;
+    }
+
 
 
 
@@ -117,6 +120,8 @@ int main() {
 
     int startX = spawnTileX * TILE_SIZE;
     int startY = spawnTileY * TILE_SIZE;
+
+    int playerHealth = 5;
 
     
     player.Init(startX, startY);
@@ -206,7 +211,7 @@ int main() {
                 return b && b->user1 == 5;
                 };
 
-            int playerHealth = 5;
+            
 
             float x = player.getX();
             float y = player.getY();
@@ -440,16 +445,28 @@ int main() {
 
             switch (user) {
             case 3: // Spike
-                std::cout << "Player hit spike! Restarting level...\n";
+                std::cout << "Player hit spike! Losing health...\n";
+                playerHealth--;
+
+                if (playerHealth <= 0) {
+                    std::cout << "Player died! Game Over.\n";
+                    al_clear_to_color(al_map_rgb(0, 0, 0));
+                    al_draw_text(font, al_map_rgb(255, 0, 0), WIDTH / 2, HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "YOU DIED");
+                    al_flip_display();
+                    al_rest(2.0);
+                    running = false;
+                    break;
+                }
+
+                // Respawn
                 player.setX(startX);
                 player.setY(startY);
-                startTime = al_get_time(); // reset timer too if you want
+                startTime = al_get_time();
+
                 break;
 
             case 5: // Ladder
-                if (!player.isOnLadder() && ladderSound) {
-                    al_play_sample(ladderSound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr);
-                }
+                
                 player.setOnLadder(true);
                 break;
 
@@ -510,6 +527,9 @@ int main() {
             case 9: // Key
                 std::cout << "Picked up key!\n";
                 hasKey = true;
+
+                al_play_sample(keySound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr);
+
 
                 // Clear the key tile visually and logically
                 {
@@ -575,13 +595,45 @@ int main() {
             player.Draw(mapxoff, mapyoff);
 
 
-            // Draw the timer
+            // ----- Status Bar Background -----
+            al_draw_filled_rectangle(0, 0, WIDTH, 60, al_map_rgb(30, 30, 30));
+
+            // ----- Time Left -----
             double timeLeft = TIME_LIMIT - (al_get_time() - startTime);
             if (timeLeft < 0) timeLeft = 0;
 
+            float barWidth = (WIDTH - 400) * (timeLeft / TIME_LIMIT); // Shrink bar over time
+            al_draw_filled_rectangle(10, 10, 10 + barWidth, 30, al_map_rgb(0, 200, 0));
+            al_draw_rectangle(10, 10, WIDTH - 390, 30, al_map_rgb(255, 255, 255), 2);
+
             std::stringstream timeText;
-            timeText << "Time Left: " << static_cast<int>(timeLeft);
-            al_draw_text(font, al_map_rgb(255, 255, 255), 10, 10, 0, timeText.str().c_str());
+            timeText << "Time: " << static_cast<int>(timeLeft) << "s";
+            al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH - 360, 10, 0, timeText.str().c_str());
+
+            //  Key Status 
+            std::string keyStatus = hasKey ? "Key: YES" : "Key: NO";
+            al_draw_text(font, al_map_rgb(255, 255, 0), WIDTH - 240, 10, 0, keyStatus.c_str());
+
+            // Health Bar
+            int maxHealth = 5;
+            int healthBarWidth = 150;
+            int barHeight = 15;
+            int barX = 10;
+            int barY = 40;
+
+            float healthRatio = static_cast<float>(playerHealth) / maxHealth;
+            float currentBarWidth = healthBarWidth * healthRatio;
+
+            al_draw_filled_rectangle(barX, barY, barX + currentBarWidth, barY + barHeight, al_map_rgb(200, 50, 50));
+            al_draw_rectangle(barX, barY, barX + healthBarWidth, barY + barHeight, al_map_rgb(255, 255, 255), 2);
+
+            std::stringstream hpText;
+            hpText << "HP: " << playerHealth << "/" << maxHealth;
+            al_draw_text(font, al_map_rgb(255, 255, 255), barX + healthBarWidth + 10, barY - 2, 0, hpText.str().c_str());
+
+
+
+           
 
             // Flip the buffer and clear the screen
             al_flip_display();
@@ -641,9 +693,10 @@ int main() {
     al_stop_sample(&bgMusicID);
     al_destroy_sample(bgMusic);
 
+    al_destroy_sample(keySound);
     al_destroy_sample(doorSound);
 
-    al_destroy_sample(ladderSound);
+    
 
 
     return 0;
