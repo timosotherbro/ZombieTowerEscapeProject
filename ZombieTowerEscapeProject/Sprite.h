@@ -1,4 +1,5 @@
 #pragma once
+#include <string>  
 #include <allegro5/allegro.h>
 #include "SpriteGrabber.h"
 
@@ -76,7 +77,14 @@ public:
         return onGround; 
     }
 
-    
+    void setOnLadder(bool value) {
+        onLadder = value; 
+    }
+
+    bool isOnLadder() const { 
+        return onLadder;
+    }
+
 
 
 
@@ -86,6 +94,8 @@ private:
     bool isMoving;
     bool facingRight;
     bool isJumping;
+
+    bool onLadder = false;
 
     // In private section
     bool jumpPressed = false;
@@ -106,6 +116,25 @@ private:
     float maxFallSpeed = 12.0f;
     bool onGround = false;
 
+    float climbSpeed = 2.0f;
+
+
+    int currentFrame = 0;
+    int animCounter = 0;
+    std::string state;
+
+    int mapxoff = 0;
+    int mapyoff = 0;
+
+    enum KeyIndex {
+        LEFT = 0,
+        RIGHT = 1,
+        UP = 2,
+        DOWN = 3
+    };
+
+
+    bool keys[4] = { false, false, false, false };
 
     std::vector<ALLEGRO_BITMAP*> rightSlashFrames;
     std::vector<ALLEGRO_BITMAP*> leftSlashFrames;
@@ -116,7 +145,7 @@ private:
     std::vector<ALLEGRO_BITMAP*> leftIdleFrames;
     std::vector<ALLEGRO_BITMAP*> rightIdleFrames;
 
-
+    std::vector<ALLEGRO_BITMAP*> climbFrames;
 
 
     SpriteGrabber* combatIdleGrabber;

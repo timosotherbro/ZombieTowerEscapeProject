@@ -87,6 +87,12 @@ void Sprite::Init(float startX, float startY) {
         }
     }
 
+    for (int i = 0; i < 6; ++i) {
+        std::stringstream ss;
+        ss << "climb" << (i + 1) << ".png";
+        climbFrames.push_back(al_load_bitmap(ss.str().c_str()));
+    }
+
 
 
 
@@ -187,6 +193,23 @@ void Sprite::Update(bool moving, bool right) {
             currentMaxFrame = static_cast<int>(leftSlashFrames.size());
     }
 
+    if (onLadder) {
+        if (!climbFrames.empty()) {
+            state = "climb";
+            animCounter++;
+            if (animCounter >= 6) {
+                animCounter = 0;
+                currentFrame = (currentFrame + 1) % climbFrames.size();
+            }
+        }
+
+        // Skip gravity while on ladder
+        yVelocity = 0;
+        return;
+    }
+
+
+
 
     else if (isJumping && jumpGrabber) {
         currentMaxFrame = static_cast<int>(jumpGrabber->getTotalFrames());
@@ -243,6 +266,12 @@ void Sprite::Draw(int xOffset, int yOffset) {
     ALLEGRO_BITMAP* frame = nullptr;
     int flags = 0;  // by default no flipping
 
+
+    if (state == "climb" && !climbFrames.empty()) {
+        al_draw_bitmap(climbFrames[currentFrame], x - mapxoff, y - mapyoff, 0);
+        return;
+    }
+
     if (isAttacking) {
         if (facingRight && curFrame < rightSlashFrames.size()) {
             frame = rightSlashFrames[curFrame];
@@ -288,7 +317,7 @@ void Sprite::Draw(int xOffset, int yOffset) {
 
 
 
-
+    
 
 
 
@@ -297,6 +326,12 @@ void Sprite::Draw(int xOffset, int yOffset) {
         int drawY = y - yOffset + (frameHeight - al_get_bitmap_height(frame)) / 2;
         al_draw_bitmap(frame, drawX, drawY, flags);
     }
+
+    if (!onLadder && state == "climb") {
+        state = "";  // Reset state when off ladder
+        currentFrame = 0;
+    }
+
 
 }
 

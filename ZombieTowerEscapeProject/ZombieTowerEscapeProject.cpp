@@ -11,6 +11,9 @@
 #include <iostream>
 #include <sstream> 
 #include "SpriteGrabber.h"
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+
 
 
 
@@ -28,6 +31,7 @@ int main() {
     al_init_primitives_addon();
     al_init_font_addon();
     al_init_ttf_addon();
+
 
     ALLEGRO_DISPLAY* display = al_create_display(WIDTH, HEIGHT);
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60);
@@ -88,6 +92,13 @@ int main() {
 
             MapUpdateAnims();
 
+            auto isLadderTile = [](float px, float py) -> bool {
+                int tileX = px / mapblockwidth;
+                int tileY = py / mapblockheight;
+                BLKSTR* b = MapGetBlock(tileX, tileY);
+                return b && b->user1 == 5;
+                };
+
 
             float x = player.getX();
             float y = player.getY();
@@ -98,7 +109,7 @@ int main() {
             float newX = x;
             float newY = y;
 
-            const float MOVE_SPEED = 3.5f;
+            const float MOVE_SPEED = 4.5f;
 
             if (keys[LEFT]) {
                 newX -= MOVE_SPEED;
@@ -119,6 +130,28 @@ int main() {
                 
             }
 
+            if (player.isOnLadder()) {
+                // Check if still on ladder
+                float px = player.getX() + player.getWidth() / 2;
+                float pyTop = player.getY();
+                float pyBottom = player.getY() + player.getHeight();
+
+                // Exit ladder if top and bottom both aren't on ladder tiles
+                if (!isLadderTile(px, pyTop) && !isLadderTile(px, pyBottom)) {
+                    player.setOnLadder(false);
+                }
+
+
+                player.setYVelocity(0); // Cancel gravity
+                if (keys[UP]) {
+                    newY -= MOVE_SPEED;
+                }
+                if (keys[DOWN]) {
+                    newY += MOVE_SPEED;
+                }
+                player.setY(newY); // Apply vertical movement
+            }
+
             MapChangeLayer(1);
 
             auto isBlockedAt = [](float px, float py) {
@@ -129,7 +162,9 @@ int main() {
 
 
                 return block && (block->tl || block->tr || block->bl || block->br);
-                };
+            };
+
+            
 
             bool blocked =
                 isBlockedAt(newX, newY) ||  // top-left
@@ -171,7 +206,7 @@ int main() {
 
             }
             // Falling or on air
-            else if (velocityY > 0 || !player.isOnGround()) {
+            else if (!player.isOnGround() && !player.isOnLadder()) {
                 bool canFall =
                     !isBlockedAt(player.getX() + 2, predictedY + player.getHeight()) &&
                     !isBlockedAt(player.getX() + player.getWidth() - 3, predictedY + player.getHeight());
@@ -245,13 +280,16 @@ int main() {
 
             MapChangeLayer(1);
 
+            
+
+
             auto getUser1At = [](float px, float py) -> int {
                 int tileX = px / mapblockwidth;
                 int tileY = py / mapblockheight;
                 BLKSTR* b = MapGetBlock(tileX, tileY);
                 if (b) return b->user1;
                 return -1;  // means no block or no user1
-                };
+            };
 
 
             // check all 4 corners of sprite
@@ -270,12 +308,16 @@ int main() {
 
             case 5: // Ladder
                 std::cout << "On ladder!\n";
-                // Optional: Set player.setOnLadder(true); if you implement ladder climbing
+                player.setOnLadder(true);
                 break;
 
             case 8: { // Door to next level
-                std::cout << "Reached exit!\n";
+                if (!hasKey) {
+                    std::cout << "Door is locked! Find the key.\n";
+                    break;
+                }
 
+                std::cout << "Reached exit!\n";
                 double time = al_get_time() - startTime;
                 std::cout << "Level " << currentLevel << " Complete in " << time << " seconds!\n";
                 al_rest(3.0);
@@ -299,8 +341,10 @@ int main() {
                 player.setX(100);
                 player.setY(100);
                 startTime = al_get_time();
+                hasKey = false; // Reset key for next level
                 break;
             }
+
             case 9: // Key
                 std::cout << "Picked up key!\n";
                 hasKey = true;
@@ -318,6 +362,7 @@ int main() {
 
 
             default:
+                player.setOnLadder(false);
                 break;
             }
 
