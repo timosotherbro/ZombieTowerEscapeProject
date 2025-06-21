@@ -489,10 +489,11 @@ int main() {
             case ALLEGRO_KEY_RIGHT: keys[RIGHT] = true; break;
             case ALLEGRO_KEY_UP:
                 keys[UP] = true;
+                player.startJump(); // <-- triggers jump if on ground
                 break;
             case ALLEGRO_KEY_DOWN: keys[DOWN] = true; break;
             case ALLEGRO_KEY_SPACE:
-                player.startJump(); // <-- Spacebar now jumps
+                
                 break;
             }
 }
