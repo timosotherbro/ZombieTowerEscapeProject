@@ -1,4 +1,4 @@
-//Charles Stoeter Final Project: Zombie Tower Escape
+﻿//Charles Stoeter Final Project: Zombie Tower Escape
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -133,9 +133,40 @@ int main() {
     }
 
 
+
+    bool inIntro = true;
+
+    while (inIntro) {
+        al_clear_to_color(al_map_rgb(0, 0, 0));
+
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 80, ALLEGRO_ALIGN_CENTER, "TOWER ESCAPE");
+        al_draw_text(font, al_map_rgb(180, 180, 180), WIDTH / 2, 140, ALLEGRO_ALIGN_CENTER, "Controls:");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 180, ALLEGRO_ALIGN_CENTER, "Left Arrow     Move Left");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 220, ALLEGRO_ALIGN_CENTER, "Right Arrow     Move Right");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 260, ALLEGRO_ALIGN_CENTER, "Up Arrow     Jump or Ascend Ladder");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 300, ALLEGRO_ALIGN_CENTER, "Down Arrow     Descend Ladder");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 360, ALLEGRO_ALIGN_CENTER, "Collect the key and escape the tower!");
+        al_draw_text(font, al_map_rgb(255, 255, 0), WIDTH / 2, 420, ALLEGRO_ALIGN_CENTER, "Press ENTER to Start");
+
+        al_flip_display();
+        al_rest(0.1);
+
+        ALLEGRO_EVENT ev;
+        al_wait_for_event(queue, &ev);
+        if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ENTER) {
+            inIntro = false;
+            al_start_timer(timer); // start the game timer AFTER intro
+            startTime = al_get_time(); // reset timing
+
+        }
+    }
+
+
     
 
-    al_start_timer(timer);
+    
+
+    
 
     while (running) {
         ALLEGRO_EVENT ev;
