@@ -31,9 +31,56 @@ int main() {
     al_init_primitives_addon();
     al_init_font_addon();
     al_init_ttf_addon();
+    
+    
+    
+    if (!al_install_audio()) {
+        std::cerr << "Failed to install audio!\n";
+        return -1;
+    }
+    if (!al_init_acodec_addon()) {
+        std::cerr << "Failed to initialize acodec!\n";
+        return -1;
+    }
+    if (!al_reserve_samples(1)) {
+        std::cerr << "Failed to reserve samples!\n";
+        return -1;
+    }
 
 
     ALLEGRO_DISPLAY* display = al_create_display(WIDTH, HEIGHT);
+    if (!display) {
+        al_show_native_message_box(NULL, "Error", "Display Error", "Failed to create display!", NULL, 0);
+        return -1;
+    }
+
+    ALLEGRO_SAMPLE* bgMusic = al_load_sample("backgroundmusic.ogg");
+    ALLEGRO_SAMPLE_ID bgMusicID;
+
+    
+    if (!bgMusic) {
+        al_show_native_message_box(display, "Error", "Audio Load", "Could not load backgroundmusic.ogg", NULL, 0);
+        return -1;
+    }
+
+    bool success = al_play_sample(bgMusic, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_LOOP, &bgMusicID);
+    if (!success) {
+        std::cout << "Failed to play sample\n";
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
 
@@ -74,6 +121,8 @@ int main() {
         return -1;
     }
 
+
+    
 
     al_start_timer(timer);
 
@@ -338,8 +387,25 @@ int main() {
                     break;
                 }
 
-                player.setX(100);
-                player.setY(100);
+                int spawnTileX = 2;
+                int spawnTileY = 22;
+
+                if (currentLevel == 2) {
+                    spawnTileX = 2;
+                    spawnTileY = 22;
+                }
+                else if (currentLevel == 3) {
+                    spawnTileX = 2;
+                    spawnTileY = 22;
+                }
+
+                int spawnX = spawnTileX * TILE_SIZE;
+                int spawnY = spawnTileY * TILE_SIZE;
+
+                player.setX(spawnX);
+                player.setY(spawnY);
+
+
                 startTime = al_get_time();
                 hasKey = false; // Reset key for next level
                 break;
@@ -433,7 +499,8 @@ int main() {
     al_destroy_display(display);
     al_destroy_font(font);
 
-
+    al_stop_sample(&bgMusicID);
+    al_destroy_sample(bgMusic);
 
     return 0;
 }

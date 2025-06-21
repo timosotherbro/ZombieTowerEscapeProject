@@ -3,6 +3,8 @@
 #include <allegro5/allegro.h>
 #include "SpriteGrabber.h"
 
+
+
 class Sprite {
 public:
     Sprite();

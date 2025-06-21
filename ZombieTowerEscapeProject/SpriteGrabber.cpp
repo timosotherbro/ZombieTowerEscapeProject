@@ -2,7 +2,8 @@
 #include <allegro5/allegro.h>
 #include <iostream>
 #include <algorithm>
-
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 
 
 SpriteGrabber::SpriteGrabber(ALLEGRO_BITMAP* sheet, int frameWidth, int frameHeight, int columns, int totalFrames,

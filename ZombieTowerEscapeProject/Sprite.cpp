@@ -3,7 +3,8 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 
 Sprite::Sprite() {
     x = y = 0;
