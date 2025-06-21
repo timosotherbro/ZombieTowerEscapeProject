@@ -340,19 +340,8 @@ int main() {
             
 
             
-            float centerX = player.getX() + player.getWidth() / 2;
-            float centerY = player.getY() + player.getHeight() / 2;
-
-            int tileX = centerX / mapblockwidth;
-            int tileY = centerY / mapblockheight;
-
-            BLKSTR* tile = MapGetBlock(tileX, tileY);
-            bool touchingLadder = tile && tile->user1 == 5;
-
-            player.setOnLadder(touchingLadder); 
 
             
-
 
             // Update animation
             player.Update(isMoving, faceRight);
@@ -500,11 +489,10 @@ int main() {
             case ALLEGRO_KEY_RIGHT: keys[RIGHT] = true; break;
             case ALLEGRO_KEY_UP:
                 keys[UP] = true;
-                player.startJump(); // <-- triggers jump if on ground
                 break;
             case ALLEGRO_KEY_DOWN: keys[DOWN] = true; break;
             case ALLEGRO_KEY_SPACE:
-                player.setAttacking(true);
+                player.startJump(); // <-- Spacebar now jumps
                 break;
             }
 }
