@@ -57,6 +57,9 @@ int main() {
     ALLEGRO_SAMPLE* bgMusic = al_load_sample("backgroundmusic.ogg");
     ALLEGRO_SAMPLE_ID bgMusicID;
 
+    ALLEGRO_SAMPLE* ladderSound = nullptr;
+
+
     
     if (!bgMusic) {
         al_show_native_message_box(display, "Error", "Audio Load", "Could not load backgroundmusic.ogg", NULL, 0);
@@ -67,6 +70,14 @@ int main() {
     if (!success) {
         std::cout << "Failed to play sample\n";
     }
+
+
+    ladderSound = al_load_sample("ladder.wav");
+    if (!ladderSound) {
+        al_show_native_message_box(display, "Error", "Audio Load", "Could not load ladder.wav", NULL, 0);
+        return -1;
+    }
+
 
 
 
@@ -115,7 +126,7 @@ int main() {
     double startTime = al_get_time();
 
     const double TIME_LIMIT = 60.0;
-    ALLEGRO_FONT* font = al_load_ttf_font("ARIAL.TTF", 24, 0);
+    ALLEGRO_FONT* font = al_load_ttf_font("toxia.ttf", 24, 0);
     if (!font) {
         al_show_native_message_box(display, "Error", "Font Load", "Could not load font!", NULL, 0);
         return -1;
@@ -237,7 +248,9 @@ int main() {
             float predictedY = player.getY() + velocityY;
 
             // Headbutt check (moving up)
+            // Apply vertical movement with proper collision
             if (velocityY < 0) {
+                // HEAD COLLISION CHECK (moving upward)
                 bool hitCeiling =
                     isBlockedAt(player.getX() + 2, predictedY) ||
                     isBlockedAt(player.getX() + player.getWidth() - 3, predictedY);
@@ -245,15 +258,37 @@ int main() {
                 if (hitCeiling) {
                     player.setYVelocity(0);
 
-                    float ceilingY = ((int)(player.getY() / mapblockheight)) * mapblockheight;
-                    player.setY(ceilingY + 1);  // Push slightly down so they don't get stuck
+                    // Snap to just below the ceiling tile
+                    float ceilingTileY = ((int)((predictedY) / mapblockheight) + 1) * mapblockheight;
+                    player.setY(ceilingTileY);
+                    player.setJumping(false);
                 }
                 else {
                     player.setY(predictedY);
                     player.setOnGround(false);
                 }
-
             }
+            else if (!player.isOnGround() && !player.isOnLadder()) {
+                // FALLING CHECK
+                bool canFall =
+                    !isBlockedAt(player.getX() + 2, predictedY + player.getHeight()) &&
+                    !isBlockedAt(player.getX() + player.getWidth() - 3, predictedY + player.getHeight());
+
+                if (canFall) {
+                    player.setY(predictedY);
+                    player.setOnGround(false);
+                }
+                else {
+                    // LANDING: Snap to top of tile
+                    player.setOnGround(true);
+                    player.setYVelocity(0);
+
+                    float snappedY = ((int)((predictedY + player.getHeight()) / mapblockheight)) * mapblockheight - player.getHeight();
+                    player.setY(snappedY);
+                    player.setJumping(false);
+                }
+            }
+
             // Falling or on air
             else if (!player.isOnGround() && !player.isOnLadder()) {
                 bool canFall =
@@ -265,11 +300,19 @@ int main() {
                     player.setOnGround(false);
                 }
                 else {
-                    // Landed
                     player.setOnGround(true);
                     player.setYVelocity(0);
-                    float snappedY = ((int)((player.getY() + player.getHeight()) / mapblockheight)) * mapblockheight - player.getHeight();
-                    player.setY(snappedY);
+
+                    float snappedY = floorf((predictedY + player.getHeight()) / mapblockheight) * mapblockheight - player.getHeight();
+                    const float SNAP_TOLERANCE = 3.0f;
+
+                    if (fabs(predictedY - snappedY) <= SNAP_TOLERANCE) {
+                        player.setY(snappedY);
+                    }
+                    else {
+                        player.setY(predictedY);
+                    }
+
                     player.setJumping(false);
                 }
             }
@@ -297,8 +340,19 @@ int main() {
             
 
             
+            float centerX = player.getX() + player.getWidth() / 2;
+            float centerY = player.getY() + player.getHeight() / 2;
+
+            int tileX = centerX / mapblockwidth;
+            int tileY = centerY / mapblockheight;
+
+            BLKSTR* tile = MapGetBlock(tileX, tileY);
+            bool touchingLadder = tile && tile->user1 == 5;
+
+            player.setOnLadder(touchingLadder); 
 
             
+
 
             // Update animation
             player.Update(isMoving, faceRight);
@@ -356,7 +410,9 @@ int main() {
                 break;
 
             case 5: // Ladder
-                std::cout << "On ladder!\n";
+                if (!player.isOnLadder() && ladderSound) {
+                    al_play_sample(ladderSound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr);
+                }
                 player.setOnLadder(true);
                 break;
 
@@ -501,6 +557,9 @@ int main() {
 
     al_stop_sample(&bgMusicID);
     al_destroy_sample(bgMusic);
+
+    al_destroy_sample(ladderSound);
+
 
     return 0;
 }
