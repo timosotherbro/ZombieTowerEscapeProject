@@ -78,6 +78,17 @@ int main() {
         return -1;
     }
 
+    ALLEGRO_SAMPLE* victorySound = al_load_sample("victory.wav");
+    if (!victorySound) {
+        al_show_native_message_box(display, "Error", "Audio Load", "Could not load victory.wav", NULL, 0);
+        return -1;
+    }
+
+    ALLEGRO_SAMPLE* doorSound = al_load_sample("door.wav");
+    if (!doorSound) {
+        al_show_native_message_box(display, "Error", "Audio Load", "Could not load door.wav", NULL, 0);
+        return -1;
+    }
 
 
 
@@ -122,6 +133,11 @@ int main() {
     enum { LEFT, RIGHT, UP, DOWN };
     bool running = true;
     bool redraw = true;
+
+    bool gameCompleted = false;
+    std::vector<double> levelTimes;
+
+
     bool hasKey = false;
     double startTime = al_get_time();
 
@@ -190,6 +206,7 @@ int main() {
                 return b && b->user1 == 5;
                 };
 
+            int playerHealth = 5;
 
             float x = player.getX();
             float y = player.getY();
@@ -445,10 +462,13 @@ int main() {
                 std::cout << "Reached exit!\n";
                 double time = al_get_time() - startTime;
                 std::cout << "Level " << currentLevel << " Complete in " << time << " seconds!\n";
+                al_play_sample(doorSound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr);
                 al_rest(3.0);
+                levelTimes.push_back(time);
 
                 currentLevel++;
                 if (currentLevel > 3) {
+                    gameCompleted = true;
                     running = false;
                     break;
                 }
@@ -569,14 +589,59 @@ int main() {
         }
     }
 
+
+
+    if (gameCompleted) {
+        al_clear_to_color(al_map_rgb(0, 0, 0));
+
+        al_play_sample(victorySound, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, nullptr);
+
+
+        al_draw_text(font, al_map_rgb(255, 255, 0), WIDTH / 2, 80, ALLEGRO_ALIGN_CENTER, "CONGRATULATIONS!");
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 140, ALLEGRO_ALIGN_CENTER, "You escaped the tower!");
+
+        double totalTime = 0;
+        for (size_t i = 0; i < levelTimes.size(); ++i) {
+            std::stringstream ss;
+            ss << "Level " << (i + 1) << ": " << static_cast<int>(levelTimes[i]) << " seconds";
+            al_draw_text(font, al_map_rgb(200, 200, 200), WIDTH / 2, 200 + i * 40, ALLEGRO_ALIGN_CENTER, ss.str().c_str());
+
+            totalTime += levelTimes[i];
+        }
+
+        std::stringstream totalSS;
+        totalSS << "Total Time: " << static_cast<int>(totalTime) << " seconds";
+        al_draw_text(font, al_map_rgb(255, 255, 255), WIDTH / 2, 200 + levelTimes.size() * 40 + 20, ALLEGRO_ALIGN_CENTER, totalSS.str().c_str());
+
+        al_draw_text(font, al_map_rgb(255, 255, 0), WIDTH / 2, HEIGHT - 100, ALLEGRO_ALIGN_CENTER, "Press ESC to Exit");
+
+        al_flip_display();
+
+        // Wait for ESC key
+        bool waiting = true;
+        while (waiting) {
+            ALLEGRO_EVENT ev;
+            al_wait_for_event(queue, &ev);
+            if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                waiting = false;
+            }
+        }
+    }
+
+
+
     MapFreeMem();
     al_destroy_event_queue(queue);
     al_destroy_timer(timer);
     al_destroy_display(display);
     al_destroy_font(font);
 
+    al_destroy_sample(victorySound);
+
     al_stop_sample(&bgMusicID);
     al_destroy_sample(bgMusic);
+
+    al_destroy_sample(doorSound);
 
     al_destroy_sample(ladderSound);
 
